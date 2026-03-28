@@ -17,9 +17,15 @@ const DOC_FIELDS: Record<DocType, string> = {
   contract: "contractUrl",
 };
 
-function DocRow({
-  type, urls, uploading, onUpload,
-}: {
+function ViewButton({ url }: { url: string }) {
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition-colors">
+      View
+    </a>
+  );
+}
+
+function DocRow({ type, urls, uploading, onUpload }: {
   type: DocType;
   urls: Record<string, string>;
   uploading: DocType | null;
@@ -32,11 +38,7 @@ function DocRow({
     <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
       <div className="flex items-center gap-3">
         {existingUrl && isImage ? (
-          <img
-            src={existingUrl}
-            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
-            onError={e => (e.currentTarget.style.display = "none")}
-          />
+          <img src={existingUrl} className="w-10 h-10 rounded-lg object-cover border border-gray-200" onError={e => (e.currentTarget.style.display = "none")} />
         ) : (
           <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-lg">
             {type === "contract" ? "📄" : type === "profilePhoto" ? "🖼️" : "🪪"}
@@ -47,25 +49,13 @@ function DocRow({
           <p className="text-xs text-gray-400">{existingUrl ? "Uploaded ✓" : "Not uploaded"}</p>
         </div>
       </div>
-
       <div className="flex items-center gap-2">
-        {existingUrl ? (
-          
-            href={existingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition-colors"
-          >
-            View
-          </a>
-        ) : null}
+        {existingUrl && <ViewButton url={existingUrl} />}
         <label className="cursor-pointer">
           <span className={`text-xs px-3 py-1.5 rounded-lg transition-colors inline-block ${
-            uploading === type
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : existingUrl
-              ? "bg-orange-50 hover:bg-orange-100 text-orange-700"
-              : "bg-purple-50 hover:bg-purple-100 text-purple-700"
+            uploading === type ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : existingUrl ? "bg-orange-50 hover:bg-orange-100 text-orange-700"
+            : "bg-purple-50 hover:bg-purple-100 text-purple-700"
           }`}>
             {uploading === type ? "Uploading..." : existingUrl ? "Re-upload" : "Upload"}
           </span>
@@ -82,9 +72,7 @@ function DocRow({
   );
 }
 
-export default function DocumentVault({
-  employeeId, token, employee, onUpdate,
-}: {
+export default function DocumentVault({ employeeId, token, employee, onUpdate }: {
   employeeId: string;
   token: string;
   employee: any;
@@ -112,11 +100,7 @@ export default function DocumentVault({
       if (!res.ok) throw new Error("Failed to get upload URL");
       const { url, publicUrl } = await res.json();
 
-      const uploadRes = await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
+      const uploadRes = await fetch(url, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
       if (!uploadRes.ok) throw new Error("S3 upload failed");
 
       const saveRes = await fetch("/api/admin/employee", {
