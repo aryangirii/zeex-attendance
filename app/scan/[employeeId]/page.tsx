@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState, use } from "react";
-import PunchButton from "@/components/PunchButton";
 import Barcode from "react-barcode";
+
+// ← PunchButton import removed
 
 export default function ScanPage({ params }: { params: Promise<{ employeeId: string }> }) {
   const { employeeId } = use(params);
@@ -9,7 +10,8 @@ export default function ScanPage({ params }: { params: Promise<{ employeeId: str
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/employee/${employeeId}`)
+    // ✅ Fix: absolute URL so it works on mobile via Vercel/ngrok
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/employee/${employeeId}`)
       .then(r => r.json())
       .then(data => { setEmployee(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -126,44 +128,35 @@ export default function ScanPage({ params }: { params: Promise<{ employeeId: str
           background: "rgba(255,255,255,0.03)",
           padding: "16px 24px",
           borderTop: "1px solid rgba(255,255,255,0.05)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          display: "flex", flexDirection: "column", alignItems: "center",
         }}>
           <Barcode
-            value={employee.employeeId}
-            width={1.5}
-            height={50}
-            fontSize={11}
-            background="transparent"
-            lineColor="#ffffff"
-            displayValue={true}
-            font="monospace"
-            textAlign="center"
-            textPosition="bottom"
-            textMargin={4}
-            margin={0}
+            value={employee.employeeId || "ZEEX-ID"}
+            width={1.5} height={50} fontSize={11}
+            background="transparent" lineColor="#ffffff"
+            displayValue={true} font="monospace"
+            textAlign="center" textPosition="bottom"
+            textMargin={4} margin={0}
           />
           <p style={{ color: "#3a5a7a", fontSize: 10, textAlign: "center", letterSpacing: 3, margin: "6px 0 0" }}>
             ZEEX AI PRIVATE LIMITED
           </p>
         </div>
 
-        {/* Punch buttons */}
-        <div style={{ padding: "0 24px 24px" }}>
-          {isActive ? (
-            <PunchButton employeeId={employeeId} employeeName={employee.fullName} />
-          ) : (
+        {/* ← Punch buttons REMOVED — now admin only */}
+        {/* Show inactive message only */}
+        {!isActive && (
+          <div style={{ padding: "0 24px 24px" }}>
             <div style={{
               textAlign: "center", padding: "12px",
               background: "rgba(239,68,68,0.1)",
               borderRadius: 12, border: "1px solid rgba(239,68,68,0.2)",
               color: "#ef4444", fontSize: 13
             }}>
-              Attendance actions disabled
+              This employee is currently inactive
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
