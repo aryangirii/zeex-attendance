@@ -17,6 +17,77 @@ const DOC_FIELDS: Record<DocType, string> = {
   contract: "contractUrl",
 };
 
+// ✅ Moved OUTSIDE main component — fixes TS2322 error
+function DocRow({
+  type,
+  urls,
+  uploading,
+  onUpload,
+}: {
+  type: DocType;
+  urls: Record<string, string>;
+  uploading: DocType | null;
+  onUpload: (file: File, type: DocType) => void;
+}) {
+  const existingUrl = urls[type];
+  const isImage = type === "profilePhoto" || type === "aadhaar" || type === "pan";
+
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+      <div className="flex items-center gap-3">
+        {existingUrl && isImage ? (
+          <img
+            src={existingUrl}
+            className="w-10 h-10 rounded-lg object-cover border border-gray-200"
+            onError={e => (e.currentTarget.style.display = "none")}
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-lg">
+            {type === "contract" ? "📄" : type === "profilePhoto" ? "🖼️" : "🪪"}
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-medium text-gray-700">{DOC_LABELS[type]}</p>
+          <p className="text-xs text-gray-400">
+            {existingUrl ? "Uploaded ✓" : "Not uploaded"}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {existingUrl && (
+          
+            href={existingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            View
+          </a>
+        )}
+        <label className="cursor-pointer">
+          <span className={`text-xs px-3 py-1.5 rounded-lg transition-colors inline-block ${
+            uploading === type
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : existingUrl
+              ? "bg-orange-50 hover:bg-orange-100 text-orange-700"
+              : "bg-purple-50 hover:bg-purple-100 text-purple-700"
+          }`}>
+            {uploading === type ? "Uploading..." : existingUrl ? "Re-upload" : "Upload"}
+          </span>
+          <input
+            type="file"
+            accept={type === "profilePhoto" ? "image/*" : "image/*,.pdf"}
+            className="hidden"
+            disabled={uploading === type}
+            onChange={e => e.target.files?.[0] && onUpload(e.target.files[0], type)}
+          />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export default function DocumentVault({
   employeeId,
   token,
@@ -27,7 +98,7 @@ export default function DocumentVault({
   token: string;
   employee: any;
   onUpdate: () => void;
-}): JSX.Element {
+}) {
   const [uploading, setUploading] = useState<DocType | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
 
@@ -83,74 +154,12 @@ export default function DocumentVault({
     setUploading(null);
   };
 
-  const DocRow = ({ type }: { type: DocType }): JSX.Element => {
-    const existingUrl = urls[type];
-    const isImage = type === "profilePhoto" || type === "aadhaar" || type === "pan";
-
-    return (
-      <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-        <div className="flex items-center gap-3">
-          {existingUrl && isImage ? (
-            <img
-              src={existingUrl}
-              className="w-10 h-10 rounded-lg object-cover border border-gray-200"
-              onError={e => (e.currentTarget.style.display = "none")}
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 text-lg">
-              {type === "contract" ? "📄" : type === "profilePhoto" ? "🖼️" : "🪪"}
-            </div>
-          )}
-          <div>
-            <p className="text-sm font-medium text-gray-700">{DOC_LABELS[type]}</p>
-            <p className="text-xs text-gray-400">
-              {existingUrl ? "Uploaded ✓" : "Not uploaded"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* ✅ Fixed <a> tag */}
-          {existingUrl && (
-            
-              href={existingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              View
-            </a>
-          )}
-
-          <label className="cursor-pointer">
-            <span className={`text-xs px-3 py-1.5 rounded-lg transition-colors inline-block ${
-              uploading === type
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : existingUrl
-                ? "bg-orange-50 hover:bg-orange-100 text-orange-700"
-                : "bg-purple-50 hover:bg-purple-100 text-purple-700"
-            }`}>
-              {uploading === type ? "Uploading..." : existingUrl ? "Re-upload" : "Upload"}
-            </span>
-            <input
-              type="file"
-              accept={type === "profilePhoto" ? "image/*" : "image/*,.pdf"}
-              className="hidden"
-              disabled={uploading === type}
-              onChange={e => e.target.files?.[0] && upload(e.target.files[0], type)}
-            />
-          </label>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div>
-      <DocRow type="profilePhoto" />
-      <DocRow type="aadhaar" />
-      <DocRow type="pan" />
-      <DocRow type="contract" />
+      <DocRow type="profilePhoto" urls={urls} uploading={uploading} onUpload={upload} />
+      <DocRow type="aadhaar" urls={urls} uploading={uploading} onUpload={upload} />
+      <DocRow type="pan" urls={urls} uploading={uploading} onUpload={upload} />
+      <DocRow type="contract" urls={urls} uploading={uploading} onUpload={upload} />
     </div>
   );
 }
