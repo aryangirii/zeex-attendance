@@ -17,12 +17,8 @@ const DOC_FIELDS: Record<DocType, string> = {
   contract: "contractUrl",
 };
 
-// ✅ Moved OUTSIDE main component — fixes TS2322 error
 function DocRow({
-  type,
-  urls,
-  uploading,
-  onUpload,
+  type, urls, uploading, onUpload,
 }: {
   type: DocType;
   urls: Record<string, string>;
@@ -48,14 +44,12 @@ function DocRow({
         )}
         <div>
           <p className="text-sm font-medium text-gray-700">{DOC_LABELS[type]}</p>
-          <p className="text-xs text-gray-400">
-            {existingUrl ? "Uploaded ✓" : "Not uploaded"}
-          </p>
+          <p className="text-xs text-gray-400">{existingUrl ? "Uploaded ✓" : "Not uploaded"}</p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
-        {existingUrl && (
+        {existingUrl ? (
           
             href={existingUrl}
             target="_blank"
@@ -64,7 +58,7 @@ function DocRow({
           >
             View
           </a>
-        )}
+        ) : null}
         <label className="cursor-pointer">
           <span className={`text-xs px-3 py-1.5 rounded-lg transition-colors inline-block ${
             uploading === type
@@ -89,10 +83,7 @@ function DocRow({
 }
 
 export default function DocumentVault({
-  employeeId,
-  token,
-  employee,
-  onUpdate,
+  employeeId, token, employee, onUpdate,
 }: {
   employeeId: string;
   token: string;
@@ -116,12 +107,7 @@ export default function DocumentVault({
       const res = await fetch("/api/admin/upload-url", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          employeeId,
-          docType: type,
-          fileName: file.name,
-          contentType: file.type,
-        }),
+        body: JSON.stringify({ employeeId, docType: type, fileName: file.name, contentType: file.type }),
       });
       if (!res.ok) throw new Error("Failed to get upload URL");
       const { url, publicUrl } = await res.json();
@@ -136,18 +122,12 @@ export default function DocumentVault({
       const saveRes = await fetch("/api/admin/employee", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          action: "updateDocs",
-          id: employeeId,
-          docType: type,
-          url: publicUrl,
-        }),
+        body: JSON.stringify({ action: "updateDocs", id: employeeId, docType: type, url: publicUrl }),
       });
       if (!saveRes.ok) throw new Error("Failed to save URL to database");
 
       setUrls(p => ({ ...p, [type]: publicUrl }));
       onUpdate();
-
     } catch (err: any) {
       alert(`Upload failed: ${err.message}`);
     }
