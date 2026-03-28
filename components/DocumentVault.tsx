@@ -27,7 +27,7 @@ export default function DocumentVault({
   token: string;
   employee: any;
   onUpdate: () => void;
-}) {
+}): JSX.Element {
   const [uploading, setUploading] = useState<DocType | null>(null);
   const [urls, setUrls] = useState<Record<string, string>>({});
 
@@ -65,7 +65,12 @@ export default function DocumentVault({
       const saveRes = await fetch("/api/admin/employee", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "updateDocs", id: employeeId, docType: type, url: publicUrl }),
+        body: JSON.stringify({
+          action: "updateDocs",
+          id: employeeId,
+          docType: type,
+          url: publicUrl,
+        }),
       });
       if (!saveRes.ok) throw new Error("Failed to save URL to database");
 
@@ -78,7 +83,7 @@ export default function DocumentVault({
     setUploading(null);
   };
 
-  const DocRow = ({ type }: { type: DocType }) => {
+  const DocRow = ({ type }: { type: DocType }): JSX.Element => {
     const existingUrl = urls[type];
     const isImage = type === "profilePhoto" || type === "aadhaar" || type === "pan";
 
@@ -105,7 +110,7 @@ export default function DocumentVault({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* ✅ Fixed — was missing opening <a tag */}
+          {/* ✅ Fixed <a> tag */}
           {existingUrl && (
             
               href={existingUrl}
