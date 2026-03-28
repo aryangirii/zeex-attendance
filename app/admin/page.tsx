@@ -337,10 +337,15 @@ export default function AdminPage() {
                 {/* Documents */}
                 {selectedEmp === emp.id && editingEmp?.id !== emp.id && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Upload Documents</p>
-                    <DocumentVault employeeId={emp.id} token={token} />
+                    <p className="text-sm font-medium text-gray-700 mb-3">Documents & Photos</p>
+                    <DocumentVault
+                      employeeId={emp.id}
+                      token={token}
+                      employee={emp}
+                      onUpdate={() => fetchEmployees(token)}
+                    />
                   </div>
-                )}
+)}
 
                 {/* Punch — admin only */}
                 {punchEmp === emp.id && editingEmp?.id !== emp.id && (

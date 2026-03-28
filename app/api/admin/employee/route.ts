@@ -54,13 +54,35 @@ export async function POST(req: NextRequest) {
       const UpdateExpression = "SET " + entries.map((_, i) => `#k${i} = :v${i}`).join(", ");
       const ExpressionAttributeNames = Object.fromEntries(entries.map(([k], i) => [`#k${i}`, k]));
       const ExpressionAttributeValues = Object.fromEntries(entries.map(([, v], i) => [`:v${i}`, v]));
-
       await dynamoClient.send(new UpdateCommand({
         TableName: process.env.DYNAMODB_EMPLOYEES_TABLE!,
         Key: { id },
         UpdateExpression,
         ExpressionAttributeNames,
         ExpressionAttributeValues,
+      }));
+      return NextResponse.json({ success: true });
+    }
+
+    // ✅ NEW: save doc/photo URLs back to DynamoDB after S3 upload
+    if (action === "updateDocs") {
+      const { id, docType, url } = data;
+      // Map docType to DynamoDB field name
+      const fieldMap: Record<string, string> = {
+        profilePhoto: "profilePhotoUrl",
+        aadhaar: "aadhaarUrl",
+        pan: "panUrl",
+        contract: "contractUrl",
+      };
+      const field = fieldMap[docType];
+      if (!field) return NextResponse.json({ error: "Invalid docType" }, { status: 400 });
+
+      await dynamoClient.send(new UpdateCommand({
+        TableName: process.env.DYNAMODB_EMPLOYEES_TABLE!,
+        Key: { id },
+        UpdateExpression: "SET #f = :u",
+        ExpressionAttributeNames: { "#f": field },
+        ExpressionAttributeValues: { ":u": url },
       }));
       return NextResponse.json({ success: true });
     }

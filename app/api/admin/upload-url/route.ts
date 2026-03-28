@@ -14,8 +14,12 @@ export async function POST(req: NextRequest) {
       ContentType: contentType || "application/octet-stream",
     });
 
-    const url = await getSignedUrl(s3Client, command, { expiresIn: 300 });
-    return NextResponse.json({ url, key });
+    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+
+    // ✅ Public URL to store in DynamoDB (bucket must allow public read)
+    const publicUrl = `https://${process.env.S3_BUCKET}.s3.ap-south-1.amazonaws.com/${key}`;
+
+    return NextResponse.json({ url: signedUrl, publicUrl, key });
 
   } catch (err: any) {
     console.error("upload-url error:", err.message);
